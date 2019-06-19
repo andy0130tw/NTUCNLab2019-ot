@@ -75,8 +75,10 @@ function sendToServer(revision, operation) {
 
 function sendOperationEach(revision, operation) {
   const resp = server.receiveOperation(revision, operation)
+  console.log('sendOE', operation)
   changesPanel.prepend(opToHtml(operation))
   sendToServer(revision, resp)
+  console.log('sendResp', resp)
 }
 
 function setupClient(name, cm, state, initRevision) {
