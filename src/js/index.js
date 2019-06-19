@@ -28,6 +28,7 @@ const deviate = x => x * 3
 const changesPanel = document.getElementById('changes-panel')
 const cOfflineMode = document.getElementById('c1-offline-mode')
 const cRandomLatency = document.getElementById('c2-random-latency')
+const cAnnoyWriter = document.getElementById('c3-annoy-writer')
 
 const opToHtml = operation => {
   const { meta } = operation
@@ -196,3 +197,16 @@ cOfflineMode.addEventListener('input', () => {
     peers.forEach(client => client.__flushOpBuffer())
   }
 })
+
+setInterval(() => {
+  if (cAnnoyWriter.checked) {
+    const doc = cmC.getDoc()
+    const cursor = doc.getCursor()
+    var line = doc.getLine(cursor.line)
+    var pos = {
+        line: 0,
+        ch: 0
+    }
+    doc.replaceRange('.', pos); // adds a new line
+  }
+}, 500)
