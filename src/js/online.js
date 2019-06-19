@@ -12,6 +12,8 @@ const { AjaxAdapter,
 
 
 const socket = io()
+const elLoading = document.getElementById('loading')
+const onlineCount = document.getElementById('onlineCount')
 
 let cm
 const state = {
@@ -33,6 +35,8 @@ function init(data) {
     lineNumbers: true,
   })
   cm.setSize(null, (12 * 1.6) + 'em')
+
+  elLoading.parentNode.removeChild(elLoading)
 
   client.sendOperation = function(revision, operation) {
     console.log('send op', id, revision, operation)
@@ -74,6 +78,16 @@ function init(data) {
   })
 }
 
-socket.emit('start', function (data) {
-  init(data)
+socket.on('userJoined', (userId, count) => {
+  console.log(`${userId} joined! User count: ${count}`)
+  onlineCount.textContent = count
 })
+
+socket.on('userLeft', (userId, count) => {
+  console.log(`${userId} left! User count: ${count}`)
+  onlineCount.textContent = count
+})
+
+socket.emit('start', init)
+
+elLoading.innerHTML += 'Connecting to the socket, fetching the document...'

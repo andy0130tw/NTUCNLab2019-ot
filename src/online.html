@@ -4,26 +4,9 @@
 <link rel="stylesheet" href="style.css">
 <div class="container">
   <h1>OT Playground</h1>
+  <p>This pad is synchronized on all clients, powered by OT! <strong>Online users: <span id="onlineCount">-</span></strong></p>
+  <p id="loading">Loading...</p>
   <textarea id="editor" style="visibility: hidden;"></textarea>
-  <!-- <div class="flex">
-    <div style="max-width: 50%;">
-      <h2>Main editor (Rev. <span id="mainRevision">0</span>)</h2>
-      <textarea id="editorA" style="visibility: hidden;"></textarea>
-      <h2>Peer editors</h2>
-      <textarea id="editorB" style="visibility: hidden;"></textarea><br>
-      <textarea id="editorC" style="visibility: hidden;"></textarea>
-    </div>
-    <div style="word-break: break-all;">
-      <h2>Condition</h2>
-      <label><input type="checkbox" id="c1-offline-mode" name="c1" autocomplete="off">Offline mode</label><br>
-      <label><input type="checkbox" id="c2-random-latency" name="c2" autocomplete="off">Simulate slow connection</label><br>
-      <label><input type="checkbox" id="c3-annoy-writer" name="c3" autocomplete="off">有人鍵盤卡住</label>
-      <h3>State of main</h3>
-      <div id="mainState"></div>
-      <h2>Changes</h2>
-      <div id="changes-panel"></div>
-    </div>
-  </div> -->
 </div>
 <script src="vendor/socket.io.js"></script>
 <script src="vendor/codemirror.js"></script>
