@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<link rel="stylesheet" href="vendor/codemirror.css">
+<link rel="stylesheet" href="style.css">
+<div class="container">
+  <h1>Minimal implementation of OT</h1>
+  <div class="flex">
+    <div>
+      <h2>Main editor</h2>
+      <textarea id="editor" style="visibility: hidden;"></textarea>
+      <h2>Debug editor</h2>
+      <textarea id="editor-debug" style="visibility: hidden;"></textarea>
+    </div>
+    <div>
+      <h2>Strategy</h2>
+      <label><input type="checkbox" name="c1">Offline mode</label><br>
+      <label><input type="checkbox" name="c2" checked>Sending changes to server</label>
+      <h2>Changes</h2>
+      <div id="changes-panel"></div>
+    </div>
+  </div>
+</div>
+<script src="vendor/codemirror.js"></script>
+<script src="vendor/ot.js"></script>
+<script type="module" src="js/index.js"></script>

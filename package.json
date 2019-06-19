@@ -1,0 +1,9 @@
+{
+  "name": "cnlab2019-ot",
+  "version": "0.0.1",
+  "main": "index.js",
+  "devDependencies": {
+    "@pika/web": "^0.4.3"
+  },
+  "dependencies": {}
+}
