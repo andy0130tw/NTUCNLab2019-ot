@@ -5,12 +5,13 @@
   <h1>Minimal implementation of OT</h1>
   <div class="flex">
     <div>
-      <h2>Main editor</h2>
-      <textarea id="editor" style="visibility: hidden;"></textarea>
-      <h2>Debug editor</h2>
-      <textarea id="editor-debug" style="visibility: hidden;"></textarea>
+      <h2>Main editor (Rev. <span id="mainRevision">0</span>)</h2>
+      <textarea id="editorA" style="visibility: hidden;"></textarea>
+      <h2>Peer editors</h2>
+      <textarea id="editorB" style="visibility: hidden;"></textarea>
+      <textarea id="editorC" style="visibility: hidden;"></textarea>
     </div>
-    <div>
+    <div style="word-break: break-all;">
       <h2>Strategy</h2>
       <label><input type="checkbox" name="c1">Offline mode</label><br>
       <label><input type="checkbox" name="c2" checked>Sending changes to server</label>
