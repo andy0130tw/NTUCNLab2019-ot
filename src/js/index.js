@@ -18,7 +18,16 @@ function createSpan(text) {
   return el
 }
 
+const ACK_LATENCY = 200
+const SEND_LATENCY = 200
+const BROADCAST_LATENCY = 600
+
+const id = x => x
+const deviate = x => x * 3
+
 const changesPanel = document.getElementById('changes-panel')
+const cOfflineMode = document.getElementById('c1-offline-mode')
+const cRandomLatency = document.getElementById('c2-random-latency')
 
 const opToHtml = operation => {
   const { meta } = operation
@@ -35,7 +44,7 @@ const opToHtml = operation => {
       return el
     }
     if (typeof opDesc == 'string') {
-      const dispStr = opDesc.replace(/\n/g, '\\n')
+      const dispStr = opDesc.replace(/\n/g, '\\n').replace(/\t/g, '\\t')
       const el = createSpan(`Insert("${dispStr}")`)
       el.style.color = 'blue'
       return el
@@ -56,16 +65,17 @@ const opToHtml = operation => {
 }
 
 function sendToServer(revision, operation) {
-  peers.forEach(client => {
-    if (client._state.isMaster) {
-      document.getElementById('mainRevision').textContent = revision
-    }
-  })
   setTimeout(() => {
     peers.forEach(client => {
       client.channel.emit('receive', operation)
     })
-  }, 1000)
+  }, (cRandomLatency.checked ? deviate : id)(BROADCAST_LATENCY))
+}
+
+function sendOperationEach(revision, operation) {
+  const resp = server.receiveOperation(revision, operation)
+  changesPanel.prepend(opToHtml(operation))
+  sendToServer(revision, resp)
 }
 
 function setupClient(name, cm, state, initRevision) {
@@ -73,13 +83,24 @@ function setupClient(name, cm, state, initRevision) {
   const channel = new EventEmitter()
 
   client._state = state
+  client.opBuffer = []
   client.channel = channel
+
+  client.__flushOpBuffer = function() {
+    console.log('flush', name, this)
+    this.opBuffer.forEach(([r, o]) => sendOperationEach(r, o))
+    this.opBuffer.length = 0
+  }
 
   client.sendOperation = function(revision, operation) {
     console.log('send op', name, revision, operation)
-    const resp = server.receiveOperation(revision, operation)
-    changesPanel.prepend(opToHtml(operation))
-    sendToServer(revision, resp)
+
+    if (!cOfflineMode.checked) {
+      // online; send directly
+      sendOperationEach(revision, operation)
+    } else {
+      client.opBuffer.push([revision, operation])
+    }
   }
 
   client.applyOperation = function(operation) {
@@ -89,31 +110,55 @@ function setupClient(name, cm, state, initRevision) {
     state.isIdle = true
   }
 
+  client.setState = function(newState) {
+    // var j, len, oldState, results, transition;
+    const oldState = this.state
+    this.state = newState
+
+    if (state.isMaster) {
+
+    // if (client._state.isMaster) {
+      document.getElementById('mainRevision').textContent = this.revision
+    // }
+      console.log('state', this.state)
+      if (this.state instanceof Client.Synchronized) {
+        document.getElementById('mainState').innerHTML = '<span style="color: green">Synchronized</span>'
+      } else if (this.state instanceof Client.AwaitingConfirm) {
+        document.getElementById('mainState').innerHTML = '<span style="color: purple">Awaiting confirm</span>'
+        document.getElementById('mainState').appendChild(opToHtml(this.state.outstanding))
+      } else if (this.state instanceof Client.AwaitingWithBuffer) {
+        document.getElementById('mainState').innerHTML = '<span style="color: purple">Awaiting with buffer</span>'
+        document.getElementById('mainState').appendChild(opToHtml(this.state.outstanding))
+        document.getElementById('mainState').appendChild(opToHtml(this.state.buffer))
+      } else {
+        console.warn('Unknown state')
+      }
+    }
+  }
+
   cm.on('changes', function(cm, changes) {
     if (!state.isIdle) return
     const operationUnwrapped = CodeMirrorAdapter.operationFromCodeMirrorChanges(changes, cm)[0]
     const operation = new WrappedOperation(operationUnwrapped, {
       creator: name,
-      id: 'operation' + Math.random() * 1000,
-    });
+      id: 'operation' + Math.floor(Math.random() * 1e9),
+    })
     client.applyClient(operation)
   })
 
   channel.on('receive', operation => {
-    setTimeout(() => {
-      if (operation.meta.creator == name) {
-        return client.serverAck()
-      } else {
-        return client.applyServer(operation)
-      }
-    }, 2000)
+    if (operation.meta.creator == name) {
+      setTimeout(() => client.serverAck(), cRandomLatency.checked ? ACK_LATENCY : 0)
+    } else {
+      setTimeout(() => client.applyServer(operation), cRandomLatency.checked ? SEND_LATENCY : 0)
+    }
   })
 
   return client
 }
 
 const peerNames = 'ABC'.split('')
-const initDoc = 'asd'
+const initDoc = 'Hello, world!\nInput some text here...'
 
 const server = new MockedServer(initDoc)
 const peers = []
@@ -140,3 +185,14 @@ const clientB = setupClient('B', cmB, sB, 0)
 const clientC = setupClient('C', cmC, sC, 0)
 
 peers.push(clientA, clientB, clientC)
+
+// force update
+clientA.setState(clientA.state)
+
+cOfflineMode.addEventListener('input', () => {
+  if (!cOfflineMode.checked) {
+    console.log('!')
+    // flush all pending operations
+    peers.forEach(client => client.__flushOpBuffer())
+  }
+})
